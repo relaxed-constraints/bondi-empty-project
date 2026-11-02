@@ -3,4 +3,5 @@ nav:
   - Overview: README.md
   - Batch parsing: parsing.md
   - Schema rendering: schema.md
+  - Prompt rendering: prompts.md
   - API reference: api.md

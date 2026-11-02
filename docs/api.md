@@ -93,3 +93,30 @@ retention on every schema, including empty schemas.
 Invalid argument types raise `TypeError`; invalid names, example counts, or
 missing value retention raise `ValueError`. See the
 [schema rendering guide](schema.md) for notation and example-selection rules.
+
+# Prompt rendering API
+
+Import `PromptTemplate` and `PROMPTS` from `json_storm.prompts`.
+
+`PromptTemplate` is a frozen dataclass with `instructions: str` and
+`query_kind: Literal["find", "aggregate"]`. Empty/whitespace instructions and
+unsupported kinds raise `ValueError` at construction.
+
+```python
+PromptTemplate.render(
+    schema_text: str,
+    *,
+    num_queries: int,
+    relationship_hints: str | None = None,
+    target_collection: str | None = None,
+) -> str
+```
+
+Returns a deterministic prompt ending with a newline. `schema_text` must be a
+nonblank string; `num_queries` a positive integer excluding booleans. Relationship
+hints must be `None` or a nonblank string. The optional target must be a nonempty
+string without null characters. Invalid arguments raise `ValueError`.
+Target membership in the supplied schema text is the caller's responsibility.
+
+`PROMPTS: dict[str, PromptTemplate]` holds `p1`–`p7`. See the
+[prompt guide](prompts.md) for query kinds, adaptation details, and usage.

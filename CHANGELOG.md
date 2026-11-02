@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add batch-aware prompt templates with optional target collections and relationship
+  hints; adapt p1–p7 to the shared parser-compatible response contract.
+
 - Add offline schema catalogue rendering with explicit nested/array paths, literal
   name quoting, missing/null observations, and optional deterministic examples.
 
