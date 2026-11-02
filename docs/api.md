@@ -120,3 +120,21 @@ Target membership in the supplied schema text is the caller's responsibility.
 
 `PROMPTS: dict[str, PromptTemplate]` holds `p1`–`p7`. See the
 [prompt guide](prompts.md) for query kinds, adaptation details, and usage.
+
+# Model API
+
+Import from `json_storm.models`:
+
+- `load_credentials(path: str | Path) -> bool`: explicitly load dotenv without
+  overwriting environment variables; missing paths raise `FileNotFoundError`.
+- `Model`: structural protocol with `generate(prompt: str) -> ModelResponse`.
+- `LiteLLMModel(model, *, timeout_seconds=120, api_base=None, parameters=None, system_instructions=DEFAULT_SYSTEM_INSTRUCTIONS)`:
+  synchronous adapter; `generate` accepts a nonblank string and propagates provider
+  exceptions. Invalid configuration raises `TypeError` or `ValueError`.
+- `ModelResponse`: frozen observation record. Fields are `text`, `requested_model`,
+  `returned_model`, `response_id`, `finish_reason`, `elapsed_ms`, `parameters`,
+  `usage`, `input_tokens`, `output_tokens`, `total_tokens`, `reasoning_tokens`,
+  `cached_input_tokens`, `estimated_cost_usd`, `cost_status`, `billing_mode`, `system_instructions`, and `reasoning_content`.
+
+See the [model guide](models.md) for metadata meanings, missing-value handling,
+reasoning settings, reserved parameters, and credential loading.

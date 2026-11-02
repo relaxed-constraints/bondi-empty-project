@@ -4,4 +4,5 @@ nav:
   - Batch parsing: parsing.md
   - Schema rendering: schema.md
   - Prompt rendering: prompts.md
+  - Model access: models.md
   - API reference: api.md

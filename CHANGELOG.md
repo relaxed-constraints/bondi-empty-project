@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Use configurable, recorded system instructions with the same MongoDB default
+  across API and subscription routes.
+
+- Replace subscription-route Codex instructions with an explicit MongoDB query
+  generation instruction and record it in model responses.
+
+- Support ChatGPT subscription routes with explicit billing metadata, OAuth setup
+  instructions, and rejection of unsupported token-limit settings.
+
+- Add explicit dotenv credential loading and a synchronous LiteLLM adapter with
+  configurable reasoning, usage breakdowns, cost estimates, and response metadata.
+
 - Add batch-aware prompt templates with optional target collections and relationship
   hints; adapt p1–p7 to the shared parser-compatible response contract.
 
