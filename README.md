@@ -128,3 +128,10 @@ uv run json-storm --help
 ## License
 
 [MIT](LICENSE).
+
+## Interactive generation walkthrough
+
+Open [notebooks/generation.ipynb](notebooks/generation.ipynb) with the project
+`.venv` kernel to explore schema inspection, prompt rendering, local model calls,
+parsed queries, and usage metadata. The model-call cell uses local Ollama
+`qwen3.6:latest` by default; no MongoDB connection is required.

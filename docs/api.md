@@ -138,3 +138,32 @@ Import from `json_storm.models`:
 
 See the [model guide](models.md) for metadata meanings, missing-value handling,
 reasoning settings, reserved parameters, and credential loading.
+
+# Generation API
+
+Import from `json_storm.generation`:
+
+```python
+generate_queries(
+    model: Model,
+    template: PromptTemplate,
+    schemas: Mapping[str, Schema],
+    *,
+    database: str,
+    num_queries: int,
+    batch_size: int,
+    target_collection: str | None = None,
+    relationship_hints: str | None = None,
+    examples_per_type: int = 0,
+) -> Iterator[GeneratedBatch]
+```
+
+Counts must be positive integers excluding booleans. The schema catalogue must be
+nonempty and target names valid. Invalid configuration raises before iteration.
+See [batch generation](generation.md) for failure and partial-result semantics.
+
+`GeneratedBatch` is a frozen dataclass containing `batch_index: int`,
+`requested_count: int`, `prompt: str`, `response: ModelResponse | None`,
+`parsed: ParsedBatch | None`, `target_violations: tuple[int, ...]` (default empty),
+and `error: Exception | None`. The generator sets either response or error;
+parsed accompanies every response. Nested response/query objects remain mutable.

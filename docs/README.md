@@ -7,6 +7,7 @@ batched LLM responses into native BONDI find or aggregation queries without I/O.
 - [Schema catalogue rendering](schema.md)
 - [Prompt rendering](prompts.md)
 - [Model access](models.md)
+- [Batch generation](generation.md)
 - [API reference](api.md)
 
 ## Development checks

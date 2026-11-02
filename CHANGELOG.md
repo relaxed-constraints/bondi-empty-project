@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add an educational generation notebook covering schemas, prompts, model calls,
+  batch inspection, usage metadata, and offline workload construction.
+
+- Add lazy sequential batch generation with exact prompt/response provenance,
+  partial-result preservation, target violation records, and stop-on-call-failure behavior.
+
 - Use configurable, recorded system instructions with the same MongoDB default
   across API and subscription routes.
 

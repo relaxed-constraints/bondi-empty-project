@@ -5,4 +5,5 @@ nav:
   - Schema rendering: schema.md
   - Prompt rendering: prompts.md
   - Model access: models.md
+  - Batch generation: generation.md
   - API reference: api.md
