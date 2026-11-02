@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add offline schema catalogue rendering with explicit nested/array paths, literal
+  name quoting, missing/null observations, and optional deterministic examples.
+
 - Identify parsed batches and candidates with a nonnegative integer `batch_index`
   instead of a string `batch_id`.
 

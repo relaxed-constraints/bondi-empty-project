@@ -1,8 +1,6 @@
-# BONDI empty project
+# BONDI JSON-Storm
 
-A minimal starting point for students building their own BONDI research project.
-It uses the same dependencies as [bondi-demo-project](https://github.com/relaxed-constraints/bondi-demo-project), 
-but starts with a barebones setup with one reusable function and examples of calling it from an experiment, a notebook and a test.
+A project for LLM-based query generation and translation for document stores.
 
 It builds on the following dependencies and tools:
 - [uv](https://docs.astral.sh/uv/getting-started/installation/) a Python project management tool
@@ -90,12 +88,12 @@ provides a slide preview and export commands. Start with the example deck in
 | Directory | Purpose |
 | --- | --- |
 | `docs/` | Space for project notes and instructions. |
-| `experiments/` | Yanex scripts; `greet.py` calls the greeting helper and logs a metric. |
+| `experiments/` | Yanex scripts |
 | `experiments/configs/` | YAML parameters; `config.yaml` contains `name`. |
-| `notebooks/` | Examples calling the helper and plotting a small table with pandas and Matplotlib. |
+| `notebooks/` | Interactive Jupyter notebooks for exploring experiment results. |
 | `results/` | Use this directory to store experiment results and create progress update slides. |
-| `src/empty_project/` | Reusable Python code goes here, replacing the `hello.py` stub. |
-| `tests/` | A unit test checking the greeting printed by `hello_world()`. |
+| `src/json_storm/` | Reusable Python code. |
+| `tests/` | Unit tests for the project. |
 
 
 ## Setup
@@ -105,8 +103,8 @@ provides a slide preview and export commands. Start with the example deck in
 Run the following command to clone the project repository to your local machine:
 
 ```sh
-git clone https://github.com/relaxed-constraints/bondi-empty-project.git
-cd bondi-empty-project
+git clone https://github.com/relaxed-constraints/bondi-json-storm.git
+cd bondi-json-storm
 ```
 
 ### 2. Install dependencies and run tests
@@ -121,83 +119,11 @@ uv run ruff check    # runs the linter to check code style
 uv run ruff format   # formats the code according to the linter rules
 ```
 
-
-## Run the experiment
-
-Activate the virtual environment and change into the experiment directory.
-
-```sh
-source .venv/bin/activate
-cd experiments
-```
-
-Then run the experiment with
-```sh
-yanex run greet.py -c configs/config.yaml
-```
-
-You can also override the default name with the `-p` (short for `--param`) flag, for example:
-
-```sh
-yanex run greet.py -c configs/config.yaml -p name=Student
-```
-
-The experiment prints a greeting and records the `name_length` metric. Yanex
-prints the experiment ID; inspect it with `yanex show <experiment-id>`.
-Without a config file, the name defaults to `World`.
-
-## Use the notebook
-
-Open `notebooks/hello.ipynb` in VS Code with its Jupyter extension and select
-this project's `.venv/bin/python` as the kernel. Run the greeting cell, then the small pandas/Matplotlib plotting example.
-
 ## Run the CLI
 
-This project includes a stub command-line interface that you can extend for your own purposes.
-Rename it in `pyproject.toml` under the `[project.scripts]` section to match your desired CLI command.
-
 ```sh
-uv run empty-cli
-uv run empty-cli --name Student
-uv run empty-cli --help
+uv run json-storm --help
 ```
-
-The CLI prints `Hello, World` by default, or greets the supplied name. Extend
-`src/empty_project/_cli.py` to add arguments using Python's `argparse` module.
-
-
-## Progress updates
-
-Start with [the example slide deck](results/week-1/presentation.md). Install
-[Marp for VS Code](https://marketplace.visualstudio.com/items?itemName=marp-team.marp-vscode)
-to preview and export it. Replace the demo title and examples with your own work.
-
-## Make it yours
-
-1. **Name your project.** Update the README title and introduction, and the `name`,
-   `description` and `authors` fields in `pyproject.toml`. For example, use
-   `my-research-project` as the project name. You can keep the `bondi-` prefix, but 
-   you don't have to. 
-2. **Rename the Python package.** Rename `src/empty_project/` to something like
-   `src/my_research_project/` (use underscores, not hyphens). Update the package
-   path under `[tool.hatch.build.targets.wheel]` and all `empty_project` imports
-   in scripts, notebooks and tests.
-3. **Replace the greeting example.** Replace `hello.py` and `hello_world()` with
-   your own reusable functions. Adapt `_cli.py` to call them, and change
-   `[project.scripts]` to match, for example
-   `my-cli = "my_research_project._cli:main"`.
-4. **Add your experiments.** Rename `experiments/greet.py`, replace the `name`
-   parameter in `experiments/configs/config.yaml`, and log metrics relevant to
-   your research instead of `name_length`. Keep reusable logic in `src/`.
-5. **Adapt the supporting files.** Rename and update `notebooks/hello.ipynb` and
-   `tests/test_hello.py` to use your new functions. Replace the demo slide content
-   and histogram in `results/` with your own progress updates, and add project
-   notes under `docs/`. Update the README commands to match your renamed files.
-6. **Refresh and check.** From the project root, run `uv sync` to update the
-   lockfile and reinstall the renamed package and CLI. Then run `uv run pytest`,
-   `uv run ruff check .` and `uv run ruff format --check .`, and try your new CLI
-   and experiment commands.
-
 
 ## License
 

@@ -2,8 +2,6 @@
 
 import argparse
 
-from empty_project.hello import hello_world
-
 
 def main() -> None:
     """Parse command-line arguments and print a greeting."""
@@ -12,7 +10,7 @@ def main() -> None:
     args = parser.parse_args()
 
     # invoke the greeting helper with the provided name
-    hello_world(args.name)
+    print(f"Hello, {args.name}")
 
 
 if __name__ == "__main__":

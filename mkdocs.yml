@@ -2,4 +2,5 @@ site_name: BONDI JSON-Storm
 nav:
   - Overview: README.md
   - Batch parsing: parsing.md
+  - Schema rendering: schema.md
   - API reference: api.md

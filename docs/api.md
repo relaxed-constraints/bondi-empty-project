@@ -70,3 +70,26 @@ Messages are explanatory diagnostics, not stable machine-readable error codes.
 
 - `QueryKind = Literal["find", "aggregate"]`
 - `MongoQuery = MongoFindQuery | MongoAggregateQuery`
+
+# Schema rendering API
+
+Import `render_schema_catalog` from `json_storm.schema`.
+
+```python
+render_schema_catalog(
+    schemas: Mapping[str, Schema],
+    *,
+    examples_per_type: int = 0,
+) -> str
+```
+
+Returns a deterministic text catalogue with explicit paths, observed types,
+missing-field counts, and optional examples. The result ends with a newline.
+An empty mapping is supported. Collection names must be nonempty strings without
+null characters; values must be BONDI `Schema` instances. `examples_per_type`
+must be a nonnegative integer, excluding booleans. Positive values require value
+retention on every schema, including empty schemas.
+
+Invalid argument types raise `TypeError`; invalid names, example counts, or
+missing value retention raise `ValueError`. See the
+[schema rendering guide](schema.md) for notation and example-selection rules.

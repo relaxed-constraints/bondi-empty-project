@@ -1,8 +1,8 @@
 [project]
-name = "bondi-empty-project"
+name = "bondi-json-storm"
 authors = [{ name = "Thomas Rueckstiess", email = "thomas@relcon.ai" }]
 version = "0.1.0"
-description = "A starting point for reproducible document database experiments with BONDI"
+description = "LLM-based query generation and translation for document stores"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -16,14 +16,14 @@ dependencies = [
 ]
 
 [project.scripts]
-empty-cli = "empty_project._cli:main"
+empty-cli = "json_storm._cli:main"
 
 [build-system]
 requires = ["hatchling>=1.26"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/empty_project"]
+packages = ["src/json_storm"]
 
 [dependency-groups]
 dev = ["pytest>=8,<9", "ruff>=0.9,<1"]
