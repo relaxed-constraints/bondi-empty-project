@@ -100,6 +100,17 @@ provides a slide preview and export commands. Start with the example deck in
 
 ## Setup
 
+### 1. Clone this repository
+
+Run the following command to clone the project repository to your local machine:
+
+```sh
+git clone https://github.com/relaxed-constraints/bondi-empty-project.git
+cd bondi-empty-project
+```
+
+### 2. Install dependencies and run tests
+
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then run
 these commands from this directory:
 
