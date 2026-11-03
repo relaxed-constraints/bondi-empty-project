@@ -6,4 +6,6 @@ nav:
   - Prompt rendering: prompts.md
   - Model access: models.md
   - Batch generation: generation.md
+  - Yanex generation: experiments.md
+  - Generation analysis: analysis.md
   - API reference: api.md

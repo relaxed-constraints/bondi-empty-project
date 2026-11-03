@@ -137,12 +137,15 @@ def test_semantics_and_write_policy_are_not_parser_responsibilities():
     assert result.candidates[0].error is None
 
 
-def test_plain_json_values_and_defensive_query_copy():
-    entry = find(filter={"date": {"$date": "2026-01-01"}}, projection={"name": 1})
+def test_extended_json_values_and_defensive_query_copy():
+    entry = find(filter={"date": {"$date": "2026-01-01T00:00:00Z"}}, projection={"name": 1})
     candidate = parse(batch(entry)).candidates[0]
-    assert candidate.query.filter == entry["filter"]
+    from datetime import datetime
+
+    assert candidate.raw == entry
+    assert candidate.query.filter == {"date": datetime(2026, 1, 1)}
     candidate.raw["filter"].clear()
-    assert candidate.query.filter == entry["filter"]
+    assert candidate.query.filter == {"date": datetime(2026, 1, 1)}
 
 
 @pytest.mark.parametrize(
@@ -244,3 +247,46 @@ def test_batch_index_is_preserved_on_batches_candidates_and_failures(batch_index
         failed = parse(response, batch_index=batch_index)
         assert failed.batch_index == batch_index
         assert failed.error is not None
+
+
+@pytest.mark.parametrize("kind", ["find", "aggregate"])
+def test_extended_json_bson_workload_roundtrip(kind, tmp_path):
+    from datetime import datetime
+
+    from bson import ObjectId, Regex
+
+    predicate = {
+        "name": {"$regex": "tom*", "$options": "i"},
+        "created": {"$gte": {"$date": "2023-01-01T00:00:00Z"}},
+        "_id": {"$oid": "507f1f77bcf86cd799439011"},
+    }
+    entry = (
+        {"collection": "users", "filter": predicate}
+        if kind == "find"
+        else {"collection": "users", "pipeline": [{"$match": predicate}]}
+    )
+    result = parse(batch(entry), query_kind=kind)
+    candidate = result.candidates[0]
+    assert candidate.error is None and candidate.raw == entry
+    query = candidate.query
+    decoded = query.filter if kind == "find" else query.pipeline[0]["$match"]
+    assert isinstance(decoded["name"], Regex)
+    assert decoded["created"]["$gte"] == datetime(2023, 1, 1)
+    assert isinstance(decoded["_id"], ObjectId)
+    path = tmp_path / "bson.jsonl"
+    Workload([WorkloadEntry(query)]).save(path)
+    restored = Workload.load(path)[0].query
+    assert restored.to_json() == query.to_json()
+
+
+@pytest.mark.parametrize(
+    "value", [{"$oid": "bad"}, {"$date": "not a date"}, {"$numberLong": "bad"}]
+)
+def test_invalid_extended_json_is_batch_decode_failure(value):
+    result = parse(batch(find(filter={"x": value})))
+    assert result.error.status == "invalid_json"
+
+
+def test_shell_dates_remain_invalid_json():
+    result = parse('{"queries":[{"collection":"users","filter":{"date":ISODate("2023-01-01")}}]}')
+    assert result.error.status == "invalid_json"

@@ -96,10 +96,29 @@ preserved. An empty array has count zero. For whole-response failures the count
 and comparison are unknown (`None`), rather than zero. There is no repair,
 truncation, replacement generation, or deduplication.
 
-Plain JSON is decoded with Python's standard numeric representation. Extended
-JSON markers such as `$date` remain dictionaries; BSON conversion is not part of
-this contract. Numeric BSON encodability and MongoDB semantic validity are not
-established here.
+Model responses use PyMongo's Extended JSON semantics. A strict JSON pass first
+rejects duplicate keys and nonstandard numeric literals, then `bson.json_util.loads`
+decodes BSON wrappers. For example:
+
+```json
+{"queries": [{"collection": "businesses", "filter": {
+  "creationDate": {"$gte": {"$date": "2023-01-01T00:00:00Z"}},
+  "_id": {"$oid": "507f1f77bcf86cd799439011"},
+  "name": {"$regex": "^tom", "$options": "i"}
+}}]}
+```
+
+Dates become Python datetimes (naive UTC under PyMongo's default options), ObjectIds
+become BSON ObjectIds, and regex wrappers become BSON Regex values. Relaxed,
+canonical, and legacy Extended JSON forms follow PyMongo's decoder semantics.
+The original response and candidate `raw` retain the JSON representation; only
+constructed query payloads use BSON values. Normalization is intentional here.
+Literal dictionaries with wrapper shapes cannot be distinguished from BSON values
+in this input contract. No custom wrapper decoding is implemented.
+
+Malformed wrappers cause whole-batch `invalid_json` decoding failures, as do shell
+constructors such as `ISODate(...)`. No automatic repair is performed. General
+BSON encodability and MongoDB semantic validity still require later checks.
 
 Parsing success does not authorize execution. Unknown operators and write stages
 such as `$out` can be represented by BONDI. A later evaluator must enforce the

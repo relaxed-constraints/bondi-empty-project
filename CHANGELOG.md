@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- Add an executed educational analysis notebook covering the four generation
+  helpers, candidate failures, duplicates and prompt/model comparisons.
+
+- Add read-only generation analysis helpers using native Yanex experiments, with
+  script validation, batch/candidate tables, yield and fingerprint diversity summaries.
+
+- Split schema sampling into a reusable Yanex experiment; generation now requires
+  a completed schema dependency and loads parsed BONDI schemas without MongoDB access.
+
+- Decode model responses with PyMongo Extended JSON semantics while retaining raw
+  JSON and strict duplicate-key checks; add BSON prompt examples and round-trip tests.
+
+- Preserve per-candidate BONDI persistence failures without aborting workload saving;
+  keep original experiment exceptions when failure checkpointing also fails.
+
+- Add a Yanex generation experiment sampling configured MongoDB namespaces through
+  BONDI, checkpointing native workloads and provenance, and logging outcome metrics.
+
 - Add an educational generation notebook covering schemas, prompts, model calls,
   batch inspection, usage metadata, and offline workload construction.
 

@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from bondi.mongodb import MongoAggregateQuery, MongoCollectionRef, MongoFindQuery
+from bson import json_util
+from bson.errors import BSONError
 
 QueryKind = Literal["find", "aggregate"]
 MongoQuery = MongoFindQuery | MongoAggregateQuery
@@ -122,7 +124,7 @@ def parse_batch(
     Invalid model output becomes result records. Invalid caller configuration
     raises TypeError or ValueError. expected_count is this call's requested count,
     including a possibly smaller final batch, rather than the experiment total.
-    Plain JSON values are preserved; Extended JSON is not converted to BSON types.
+    Extended JSON uses PyMongo BSON semantics; raw entries retain their original JSON values.
     Successful parsing does not establish semantic validity or read-only safety.
     """
     if not isinstance(response, str):
@@ -139,8 +141,11 @@ def parse_batch(
         MongoCollectionRef(database, name)  # Validate configuration before parsing model output.
     names = frozenset(collections)
     try:
-        payload = json.loads(response, object_pairs_hook=_object, parse_constant=_constant)
-    except (ValueError, RecursionError) as exc:
+        raw_payload = json.loads(response, object_pairs_hook=_object, parse_constant=_constant)
+        # object_pairs_hook overrides json_util's object_hook: validate duplicates
+        # separately, then decode BSON with PyMongo's normal Extended JSON semantics.
+        payload = json_util.loads(response, parse_constant=_constant)
+    except (ValueError, TypeError, KeyError, BSONError, RecursionError, OverflowError) as exc:
         return ParsedBatch(
             batch_index, response, expected_count, error=ParseError("invalid_json", str(exc))
         )
@@ -164,9 +169,16 @@ def parse_batch(
         except (TypeError, ValueError, RecursionError) as exc:
             candidates.append(
                 ParsedCandidate(
-                    batch_index, position, entry, error=ParseError("invalid_query_shape", str(exc))
+                    batch_index,
+                    position,
+                    raw_payload["queries"][position],
+                    error=ParseError("invalid_query_shape", str(exc)),
                 )
             )
         else:
-            candidates.append(ParsedCandidate(batch_index, position, entry, query=query))
+            candidates.append(
+                ParsedCandidate(
+                    batch_index, position, raw_payload["queries"][position], query=query
+                )
+            )
     return ParsedBatch(batch_index, response, expected_count, tuple(candidates))

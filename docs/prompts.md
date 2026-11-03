@@ -43,4 +43,6 @@ No requirement for unique queries or nonempty results is added.
 
 Custom prompts can use `PromptTemplate("Research instructions here.", "find")`.
 Instructions should describe the research task; avoid conflicting output formats.
-Plain JSON is requested; Extended JSON conversion is not introduced here.
+Extended JSON is requested for BSON values, with date, ObjectId, and regex examples.
+Shell constructors are explicitly prohibited. The parser normalizes these values
+using PyMongo while retaining the original response.

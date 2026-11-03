@@ -8,6 +8,7 @@ batched LLM responses into native BONDI find or aggregation queries without I/O.
 - [Prompt rendering](prompts.md)
 - [Model access](models.md)
 - [Batch generation](generation.md)
+- [Yanex generation experiment](experiments.md)
 - [API reference](api.md)
 
 ## Development checks

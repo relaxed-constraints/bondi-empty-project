@@ -89,7 +89,11 @@ class PromptTemplate:
             )
         rules.extend(
             [
-                "Use plain JSON values, not JavaScript constructors or Python expressions.",
+                "Use MongoDB Extended JSON for BSON values; use ordinary JSON for other values.",
+                'Date example: {"creationDate": {"$gte": {"$date": "2023-01-01T00:00:00Z"}}}',
+                'ObjectId example: {"_id": {"$oid": "507f1f77bcf86cd799439011"}}',
+                'Regex example: {"name": {"$regex": "^tom", "$options": "i"}}',
+                "Do not use ISODate(...), ObjectId(...), new Date(...), or Python expressions.",
                 "The following is a structural example with one entry, not a query to copy; "
                 "return the requested number of entries:",
                 json.dumps({"queries": [example]}),

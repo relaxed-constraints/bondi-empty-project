@@ -1,0 +1,10 @@
+mongodb:
+  uri: mongodb://localhost:27018
+  timeout_seconds: 30
+namespaces:
+  - mathexchange.users
+  - mathexchange.posts
+  - mathexchange.postHistory
+sample_size: 10000
+# Retain distinct values so generation can vary examples_per_type without resampling.
+retain_values: true

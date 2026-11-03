@@ -52,7 +52,7 @@ A frozen dataclass with fields:
 | --- | --- | --- |
 | `batch_index` | `int` | Parent batch index |
 | `position` | `int` | Zero-based position in the response array |
-| `raw` | `Any` | Original decoded entry, including invalid entries |
+| `raw` | `Any` | Original JSON entry before BSON conversion, including invalid entries |
 | `query` | `MongoFindQuery \| MongoAggregateQuery \| None` | Constructed query; defaults to `None` |
 | `error` | `ParseError \| None` | Entry failure; defaults to `None` |
 
@@ -167,3 +167,43 @@ See [batch generation](generation.md) for failure and partial-result semantics.
 `parsed: ParsedBatch | None`, `target_violations: tuple[int, ...]` (default empty),
 and `error: Exception | None`. The generator sets either response or error;
 parsed accompanies every response. Nested response/query objects remain mutable.
+
+
+# Sampling and artifact API
+
+`json_storm.sampling.collection_targets(namespaces)` validates distinct
+single-database namespaces and returns BONDI collection references.
+`sample_schemas(executor, namespaces, *, sample_size=100, retain_values=False)`
+returns `(schemas, sample_records)` using a borrowed BONDI executor. Empty samples
+raise `ValueError`. The caller owns the connection lifecycle.
+
+`json_storm.artifacts.save_bson_jsonl(records, path)` is a Yanex-compatible saver
+for BSON sample records. `GenerationArtifacts(save_artifact)` owns cumulative
+records and metrics; `add(batch)` saves one batch, and `checkpoint(status)` saves
+the cumulative workload, mapping, candidates and manifest. Pass Yanex's native
+`save_artifact` function. See the [experiment guide](experiments.md) for the schema.
+
+`GenerationArtifacts` checks native query serialization before workload acceptance.
+Candidate records retain `persistence_error` separately from parse errors; metrics
+include `queries_persistence_failed`. Raw queries are preserved without rewriting.
+
+Model response parsing uses PyMongo Extended JSON semantics after strict JSON validation.
+Malformed BSON wrappers produce batch-level `invalid_json`; candidate `raw` values
+remain ordinary JSON, while BONDI queries contain decoded BSON values.
+
+`validate_schema_artifact(schemas, manifest) -> str` validates the snapshot version,
+BONDI version, schema object types and catalogue/namespace agreement, returning the
+database name. It operates on already-loaded trusted objects.
+
+# Analysis API
+
+`json_storm.analysis` accepts native `yanex.results.Experiment` objects:
+
+- `summarize_run(experiment) -> dict`: recorded metrics, configuration and derived yield/efficiency.
+- `batch_table(experiment) -> pandas.DataFrame`: saved batch outcomes and usage.
+- `candidate_table(experiment) -> pandas.DataFrame`: candidate outcomes and native fingerprints.
+- `runs_table(experiments: Sequence[Experiment]) -> pandas.DataFrame`: summaries in input order.
+
+Every experiment must have script basename `generate.py`; missing or other names
+raise `ValueError`. See [generation analysis](analysis.md) for column definitions,
+missing-data handling and partial-run semantics.

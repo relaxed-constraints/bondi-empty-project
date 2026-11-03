@@ -1,0 +1,13 @@
+examples_per_type: 0
+prompt_id: p3
+num_queries: 20
+batch_size: 5
+target_collection: posts
+relationship_hints: null
+model:
+  name: ollama_chat/qwen3.8:27b-mlx
+  api_base: http://localhost:11434
+  timeout_seconds: 120
+  parameters:
+    think: false
+  system_instructions: "You generate MongoDB queries. Follow the user's query instructions and response format exactly."

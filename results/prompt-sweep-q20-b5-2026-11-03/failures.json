@@ -1,0 +1,82 @@
+[
+  {
+    "prompt": "p1",
+    "run_id": "28b9755c",
+    "batch_index": 1,
+    "outcome": "batch decode failure",
+    "error": "Expecting ',' delimiter: line 76 column 25 (char 1900)",
+    "excerpt": "              0,\n                            47\n                          ]\n                        ],\n                        \"...\"\n                      ]\n                    }\n                ],\n                \"default\": \"$title\"\n              }\n"
+  },
+  {
+    "prompt": "p1",
+    "run_id": "28b9755c",
+    "batch_index": 2,
+    "outcome": "batch decode failure",
+    "error": "Expecting ':' delimiter: line 591 column 21 (char 14181)",
+    "excerpt": "          \"$subtract\": [\n                    {\n                      \"$dateNow\"\n                    },\n                    \"$creationDate\"\n                  ]\n                },\n                86400000\n              ]\n            },\n            \"has"
+  },
+  {
+    "prompt": "p1",
+    "run_id": "28b9755c",
+    "batch_index": 3,
+    "outcome": "batch decode failure",
+    "error": "Expecting value: line 236 column 63 (char 6019)",
+    "excerpt": "             },\n                    {\n                      \"$ne\": [\"$latestEditInfo.lastEditDate\", undefined]\n                    }\n                  ]\n                },\n                \"then\": {\n                  \"$toInt\": {\n                    \"$"
+  },
+  {
+    "prompt": "p5",
+    "run_id": "5f3c7b72",
+    "batch_index": 0,
+    "outcome": "batch decode failure",
+    "error": "Expecting ',' delimiter: line 182 column 15 (char 4708)",
+    "excerpt": "0\n                      }\n                    }\n                  ]\n                }\n              }\n            },\n            \"hasComments\": {\n              \"$cond\": {\n                \"if\": {\n                  \"$ne\": [\n                    \"$commen"
+  },
+  {
+    "prompt": "p5",
+    "run_id": "5f3c7b72",
+    "batch_index": 1,
+    "outcome": "batch decode failure",
+    "error": "Expecting property name enclosed in double quotes: line 23 column 17 (char 460)",
+    "excerpt": "re\",\n                  0\n                ]\n              },\n              \"else\": {\n                -1\n              }\n            }\n          },\n          \"hasOwner\": {\n            \"$ne\": [\n              \"$ownerUserId\",\n              null\n          "
+  },
+  {
+    "prompt": "p5",
+    "run_id": "5f3c7b72",
+    "batch_index": 3,
+    "outcome": "batch decode failure",
+    "error": "Expecting ':' delimiter: line 49 column 25 (char 1148)",
+    "excerpt": "       ]\n                      }\n                    ]\n                  },\n                  \"true\",\n                  \"false\"\n                }\n              }\n            ]\n          }\n        }\n      },\n      {\n        \"$lookup\": {\n          \"fro"
+  },
+  {
+    "prompt": "p6",
+    "run_id": "4ef16c01",
+    "batch_index": 1,
+    "outcome": "batch decode failure",
+    "error": "Duplicate JSON key: 'creationDate'",
+    "excerpt": ""
+  },
+  {
+    "prompt": "p7",
+    "run_id": "e8999d55",
+    "batch_index": 0,
+    "outcome": "batch decode failure",
+    "error": "Expecting ',' delimiter: line 321 column 43 (char 8697)",
+    "excerpt": "   \"$creationDate\"\n                  ]\n                },\n                { \"$multiply\": [ 1000, 60 * 60 * 24 ] }\n              ]\n            }\n          }\n        },\n        {\n          \"$lookup\": {\n            \"from\": \"postHistory\",\n            \"lo"
+  },
+  {
+    "prompt": "p7",
+    "run_id": "e8999d55",
+    "batch_index": 1,
+    "outcome": "batch decode failure",
+    "error": "Expecting property name enclosed in double quotes: line 618 column 5 (char 14834)",
+    "excerpt": "         \"$engagementScore\",\n              2\n            ]\n          }\n        }\n      }\n    ],\n    {\n      \"collection\": \"posts\",\n      \"pipeline\": [\n        {\n          \"$match\": {\n            \"postTypeId\": {\n              \"$in\": [\n                "
+  },
+  {
+    "prompt": "p7",
+    "run_id": "e8999d55",
+    "batch_index": 2,
+    "outcome": "batch decode failure",
+    "error": "Expecting property name enclosed in double quotes: line 7 column 1 (char 56)",
+    "excerpt": "{\n\"queries\": [\n{\n\"collection\": \"posts\",\n\"pipeline\": [\n{\n$facet: {\n\"complex_analysis\": [\n{\n$addFields: {\n\"user_context\": {\n$cond: {\nif: { $eq: [\"$ownerUserId\", null] },\nthen: { displayName: \"Anonymous\", repu"
+  }
+]
