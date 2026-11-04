@@ -187,7 +187,8 @@ the cumulative workload, mapping, candidates and manifest. Pass Yanex's native
 Candidate records retain `persistence_error` separately from parse errors; metrics
 include `queries_persistence_failed`. Raw queries are preserved without rewriting.
 
-Model response parsing uses PyMongo Extended JSON semantics after strict JSON validation.
+Model response parsing uses BONDI 0.1.5 `loads_query_json` for strict JSON and
+query-aware BSON decoding. `$regex` operator documents remain dictionaries.
 Malformed BSON wrappers produce batch-level `invalid_json`; candidate `raw` values
 remain ordinary JSON, while BONDI queries contain decoded BSON values.
 
@@ -199,11 +200,23 @@ database name. It operates on already-loaded trusted objects.
 
 `json_storm.analysis` accepts native `yanex.results.Experiment` objects:
 
-- `summarize_run(experiment) -> dict`: recorded metrics, configuration and derived yield/efficiency.
-- `batch_table(experiment) -> pandas.DataFrame`: saved batch outcomes and usage.
-- `candidate_table(experiment) -> pandas.DataFrame`: candidate outcomes and native fingerprints.
-- `runs_table(experiments: Sequence[Experiment]) -> pandas.DataFrame`: summaries in input order.
+- `summarize_generation_run(experiment) -> dict`: recorded metrics, configuration and derived yield/efficiency.
+- `generation_batches_table(experiment) -> pandas.DataFrame`: saved batch outcomes and usage.
+- `generation_candidates_table(experiment) -> pandas.DataFrame`: candidate outcomes and native fingerprints.
+- `generation_runs_table(experiments: Sequence[Experiment]) -> pandas.DataFrame`: summaries in input order.
 
 Every experiment must have script basename `generate.py`; missing or other names
 raise `ValueError`. See [generation analysis](analysis.md) for column definitions,
 missing-data handling and partial-run semantics.
+
+# Execution analysis API
+
+`json_storm.execution` provides the workload transformation;
+`json_storm.analysis` provides the two result tables:
+
+- `make_existence_workload(workload: Workload) -> Workload`: independent read-query copies with output limited to one.
+- `execution_planning_table(workload, results: Sequence[ExecutionResult]) -> pandas.DataFrame`: conservative planning classification.
+- `execution_existence_table(workload, results: Sequence[ExecutionResult]) -> pandas.DataFrame`: classify limit-one execution results.
+
+See [query execution](execution.md) for outcomes, columns, unsupported stages and
+error handling. Execution itself remains with BONDI's native executor.

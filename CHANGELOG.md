@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- Add an execution-analysis notebook for per-query outcomes, failures and
+  cross-run comparisons, with explicit experiment-ID selection.
+
+- Prefix generation/execution analysis helpers by stage and consolidate result
+  tables in analysis.py; update scripts, notebooks and reference documentation.
+
+- Upgrade to published BONDI 0.1.5 and use `loads_query_json` for model responses,
+  preserving regex operator documents and supporting BSON-valued projections.
+
+- Add a Yanex execution experiment with generation dependency, per-phase outcome
+  metrics, native result artifacts and classification tables.
+
+- Add independent limit-one workloads and native BONDI planning/existence result
+  tables with conservative error classification and read-query stage checks.
+
 - Add an executed educational analysis notebook covering the four generation
   helpers, candidate failures, duplicates and prompt/model comparisons.
 

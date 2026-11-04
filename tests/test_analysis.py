@@ -7,7 +7,12 @@ from bondi.mongodb import MongoCollectionRef, MongoFindQuery
 from bondi.workload import Workload, WorkloadEntry
 from yanex.results import Experiment
 
-from json_storm.analysis import batch_table, candidate_table, runs_table, summarize_run
+from json_storm.analysis import (
+    generation_batches_table,
+    generation_candidates_table,
+    generation_runs_table,
+    summarize_generation_run,
+)
 
 
 @pytest.fixture
@@ -53,7 +58,7 @@ def run():
 
 def test_summary_duplicates_and_failed_batches(run):
     exp, _ = run
-    row = summarize_run(exp)
+    row = summarize_generation_run(exp)
     assert row["status"] == "failed"
     assert row["accepted_yield"] == 0.5
     assert row["distinct_yield"] == 0.25
@@ -62,28 +67,28 @@ def test_summary_duplicates_and_failed_batches(run):
     assert row["undecodable_batch_slots"] == 2
     assert row["output_tokens_per_accepted"] is None
     assert row["metrics_source"] == "manifest"
-    assert batch_table(exp).output_tokens.iloc[0] == 10
-    assert candidate_table(exp).fingerprint.nunique() == 1
+    assert generation_batches_table(exp).output_tokens.iloc[0] == 10
+    assert generation_candidates_table(exp).fingerprint.nunique() == 1
 
 
 def test_missing_not_zero(run):
     exp, artifacts = run
     artifacts.clear()
-    row = summarize_run(exp)
+    row = summarize_generation_run(exp)
     assert row["accepted_yield"] is None
     assert row["unique_queries"] is None
     assert row["undecodable_batch_slots"] is None
-    assert not candidate_table(exp).attrs["artifact_available"]
-    assert batch_table(exp).empty
+    assert not generation_candidates_table(exp).attrs["artifact_available"]
+    assert generation_batches_table(exp).empty
 
 
 def test_missing_batch_and_mapping(run):
     exp, artifacts = run
     del artifacts["000001.json"]
     del artifacts["workload_mapping.json"]
-    assert batch_table(exp).outcome.tolist() == ["decoded", "missing_artifact"]
-    assert summarize_run(exp)["unique_queries"] is None
-    assert summarize_run(exp)["undecodable_batch_slots"] is None
+    assert generation_batches_table(exp).outcome.tolist() == ["decoded", "missing_artifact"]
+    assert summarize_generation_run(exp)["unique_queries"] is None
+    assert summarize_generation_run(exp)["undecodable_batch_slots"] is None
 
 
 def test_logged_latest_and_coverage(run):
@@ -92,14 +97,16 @@ def test_logged_latest_and_coverage(run):
         {"queries_accepted": 1},
         {"queries_accepted": 2, "output_tokens": 10, "output_tokens_reported_calls": 1},
     ]
-    row = summarize_run(exp)
+    row = summarize_generation_run(exp)
     assert row["queries_accepted"] == 2
     assert row["output_tokens_reported_calls"] == 1
     assert row["output_tokens_per_accepted"] == 5
     assert row["metrics_source"] == "logged"
 
 
-@pytest.mark.parametrize("helper", [summarize_run, batch_table, candidate_table])
+@pytest.mark.parametrize(
+    "helper", [summarize_generation_run, generation_batches_table, generation_candidates_table]
+)
 @pytest.mark.parametrize("script", [None, "schema.py", "not_generate.py"])
 def test_script_validation(run, helper, script):
     exp, _ = run
@@ -120,7 +127,7 @@ def test_candidates_keep_failures(run):
         {"batch_index": 2, "position": 1, "accepted": False, "error": {"status": "bad"}},
         {"batch_index": 2, "position": 2, "accepted": False, "target_violation": True},
     ]
-    assert candidate_table(exp).outcome.tolist()[-3:] == [
+    assert generation_candidates_table(exp).outcome.tolist()[-3:] == [
         "persistence_failed",
         "parse_failed",
         "target_violation",
@@ -129,11 +136,11 @@ def test_candidates_keep_failures(run):
 
 def test_versions_mapping_and_selection(run):
     exp, artifacts = run
-    assert runs_table([exp, exp]).experiment_id.tolist() == ["test1234", "test1234"]
-    assert runs_table([]).empty
+    assert generation_runs_table([exp, exp]).experiment_id.tolist() == ["test1234", "test1234"]
+    assert generation_runs_table([]).empty
     artifacts["workload_mapping.json"][1]["workload_position"] = 0
     with pytest.raises(ValueError, match="mapping"):
-        candidate_table(exp)
+        generation_candidates_table(exp)
     artifacts["manifest.json"]["format_version"] = 99
     with pytest.raises(ValueError, match="format"):
-        batch_table(exp)
+        generation_batches_table(exp)

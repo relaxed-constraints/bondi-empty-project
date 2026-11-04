@@ -144,7 +144,9 @@ def test_unreadable_batch_not_counted_as_zero_returned_queries():
         ("aggregate", {"collection": "posts", "pipeline": [{"$match": {"body": {"$regex": "a"}}}]}),
     ],
 )
-def test_regex_persistence_failure_preserves_raw_and_valid_siblings(tmp_path, kind, entry):
+def test_ambiguous_literal_persistence_failure_preserves_raw_and_valid_siblings(
+    tmp_path, kind, entry
+):
     saved = {}
 
     def save(obj, name, saver=None):
@@ -168,9 +170,9 @@ def test_regex_persistence_failure_preserves_raw_and_valid_siblings(tmp_path, ki
     )
     # Direct native callers can still supply ambiguous dictionaries; retain the guard.
     if kind == "find":
-        parsed.candidates[1].query.filter = entry["filter"]
+        parsed.candidates[1].query.filter = {"literal": {"$numberLong": "1"}}
     else:
-        parsed.candidates[1].query.pipeline = entry["pipeline"]
+        parsed.candidates[1].query.pipeline = [{"$match": {"literal": {"$numberLong": "1"}}}]
     writer = GenerationArtifacts(save)
     writer.add(GeneratedBatch(0, 3, "prompt", model_response(text), parsed))
     writer.checkpoint("completed")

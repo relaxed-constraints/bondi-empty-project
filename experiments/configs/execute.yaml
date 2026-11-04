@@ -1,0 +1,5 @@
+mongodb:
+  uri: mongodb://localhost:27018
+  # Per operation, including cursor consumption; not a whole-workload deadline.
+  timeout_seconds: 60
+  concurrency: 1

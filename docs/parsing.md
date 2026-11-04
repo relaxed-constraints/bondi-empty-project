@@ -96,9 +96,8 @@ preserved. An empty array has count zero. For whole-response failures the count
 and comparison are unknown (`None`), rather than zero. There is no repair,
 truncation, replacement generation, or deduplication.
 
-Model responses use PyMongo's Extended JSON semantics. A strict JSON pass first
-rejects duplicate keys and nonstandard numeric literals, then `bson.json_util.loads`
-decodes BSON wrappers. For example:
+Model responses use `bondi.mongodb.loads_query_json` (BONDI 0.1.5). BONDI
+validates strict JSON and decodes BSON wrappers while preserving query operators. For example:
 
 ```json
 {"queries": [{"collection": "businesses", "filter": {
@@ -109,8 +108,9 @@ decodes BSON wrappers. For example:
 ```
 
 Dates become Python datetimes (naive UTC under PyMongo's default options), ObjectIds
-become BSON ObjectIds, and regex wrappers become BSON Regex values. Relaxed,
-canonical, and legacy Extended JSON forms follow PyMongo's decoder semantics.
+become BSON ObjectIds. `$regex`/`$options` documents remain operator dictionaries,
+including under `$elemMatch`; only explicit `$regularExpression` wrappers become
+BSON Regex values. Canonical and relaxed Extended JSON are supported.
 The original response and candidate `raw` retain the JSON representation; only
 constructed query payloads use BSON values. Normalization is intentional here.
 Literal dictionaries with wrapper shapes cannot be distinguished from BSON values

@@ -255,14 +255,14 @@ wheels = [
 
 [[package]]
 name = "bondi"
-version = "0.1.4"
+version = "0.1.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pymongo" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e2/b9/e0a91399684cb9532260f5d67ed86e74c24eb042a7c6963a87159fe7772c/bondi-0.1.4.tar.gz", hash = "sha256:46a8a41bb031b3d86920aa7a1ca268794005b6769be586a3f25285e2183d93bb", size = 164886 }
+sdist = { url = "https://files.pythonhosted.org/packages/b4/0b/a3238f661a9ce883051dc43541c26c1f6d949749384f5e5a02497428e075/bondi-0.1.5.tar.gz", hash = "sha256:69f6e93e2eb7df89dc6846076179e6157c3dfdca1777414ce0af0606ce95cb15", size = 168968 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3b/ba/feda096265440417b3f88cf98d946ee3e34aed2c94f9de0a81dc921b24ac/bondi-0.1.4-py3-none-any.whl", hash = "sha256:96f632901f64c845beda8e964eabb4e1a8fb338aa8b538b02b1e2a97ad937f9e", size = 76667 },
+    { url = "https://files.pythonhosted.org/packages/c2/e2/869aa647f825080ba7fbdb5eb5bd7569384b8ce88c0bd221271b9d15a90b/bondi-0.1.5-py3-none-any.whl", hash = "sha256:f1777dd605e712a0cb3c71e87cc4dc4f06f0c2f4e1f7f30c71b6363cdba2a3ab", size = 79066 },
 ]
 
 [[package]]
@@ -289,7 +289,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bondi", specifier = "==0.1.4" },
+    { name = "bondi", specifier = "==0.1.5" },
     { name = "huggingface-hub", specifier = ">=0.30,<2" },
     { name = "ipykernel", specifier = ">=7.4.0" },
     { name = "litellm", extras = ["mcp"], specifier = ">=1.106.6" },

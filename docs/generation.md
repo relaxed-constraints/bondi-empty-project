@@ -10,13 +10,17 @@ from json_storm.models import LiteLLMModel
 from json_storm.prompts import PROMPTS
 
 model = LiteLLMModel(
-    "ollama_chat/qwen3.6:latest", api_base="http://localhost:11434",
+    "ollama_chat/qwen3.6:latest",
+    api_base="http://localhost:11434",
     parameters={"think": False},
 )
 records = generate_queries(
-    model, PROMPTS["p3"],
+    model,
+    PROMPTS["p3"],
     {"businesses": Schema.from_documents([{"stars": 4.5}])},
-    database="research", num_queries=5, batch_size=2,
+    database="research",
+    num_queries=5,
+    batch_size=2,
     target_collection="businesses",
 )
 for batch in records:

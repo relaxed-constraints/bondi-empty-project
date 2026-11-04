@@ -7,7 +7,7 @@ relationship_hints: null
 model:
   name: ollama_chat/qwen3.8:27b-mlx
   api_base: http://localhost:11434
-  timeout_seconds: 120
+  timeout_seconds: 240
   parameters:
     think: false
   system_instructions: "You generate MongoDB queries. Follow the user's query instructions and response format exactly."

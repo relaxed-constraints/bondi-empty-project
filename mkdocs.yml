@@ -8,4 +8,5 @@ nav:
   - Batch generation: generation.md
   - Yanex generation: experiments.md
   - Generation analysis: analysis.md
+  - Query execution: execution.md
   - API reference: api.md

@@ -8,10 +8,12 @@ from bondi.schema import Schema
 from json_storm.schema import render_schema_catalog
 
 schemas = {
-    "businesses": Schema.from_documents([
-        {"address": {"city": "Sydney"}, "categories": ["Cafe"]},
-        {"address": {}},
-    ]),
+    "businesses": Schema.from_documents(
+        [
+            {"address": {"city": "Sydney"}, "categories": ["Cafe"]},
+            {"address": {}},
+        ]
+    ),
     "reviews": Schema.from_documents([{"business_id": "b1", "rating": 5}]),
 }
 text = render_schema_catalog(schemas)

@@ -1,4 +1,4 @@
-"""Read-only generation analysis using native Yanex experiments and BONDI workloads."""
+"""Read-only generation and execution analysis using native Yanex and BONDI objects."""
 
 import hashlib
 import json
@@ -6,8 +6,13 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import pandas as pd
+from bondi.execution import ExecutionResult
+from bondi.mongodb import MongoFindQuery
 from bondi.workload import Workload
+from pymongo.errors import OperationFailure
 from yanex.results import Experiment
+
+from json_storm.execution import _validate_mongo_workload
 
 _USAGE = (
     "input_tokens",
@@ -56,7 +61,7 @@ def _manifest(experiment: Experiment) -> dict | None:
     return manifest
 
 
-def batch_table(experiment: Experiment) -> pd.DataFrame:
+def generation_batches_table(experiment: Experiment) -> pd.DataFrame:
     """One row per saved or manifest-listed batch, including missing batch artifacts.
 
     Supports both nested batch paths and Yanex's legacy flattened filenames.
@@ -110,7 +115,7 @@ def batch_table(experiment: Experiment) -> pd.DataFrame:
     return table
 
 
-def candidate_table(experiment: Experiment) -> pd.DataFrame:
+def generation_candidates_table(experiment: Experiment) -> pd.DataFrame:
     """One row per decoded candidate, retaining errors and accepted query fingerprints.
 
     No candidates are invented for undecodable batches. Missing candidate artifacts
@@ -171,7 +176,7 @@ def _ratio(numerator, denominator):
     return numerator / denominator if numerator is not None and denominator else None
 
 
-def summarize_run(experiment: Experiment) -> dict:
+def summarize_generation_run(experiment: Experiment) -> dict:
     """Summarize one run without excluding failed runs or filling missing metrics with zero.
 
     Recorded metrics use the latest logged step, falling back to checkpoint metrics
@@ -207,7 +212,7 @@ def summarize_run(experiment: Experiment) -> dict:
         reasoning_effort=model.get("parameters", {}).get("reasoning_effort"),
         schema_sha256=hashlib.sha256(schema.encode()).hexdigest() if schema is not None else None,
     )
-    candidates = candidate_table(experiment)
+    candidates = generation_candidates_table(experiment)
     accepted = candidates[candidates.accepted.eq(True)]
     complete = (
         candidates.attrs["artifact_available"]
@@ -227,7 +232,7 @@ def summarize_run(experiment: Experiment) -> dict:
     )
     for field in _USAGE:
         row[f"{field}_per_accepted"] = _ratio(metrics.get(field), metrics.get("queries_accepted"))
-    batches = batch_table(experiment)
+    batches = generation_batches_table(experiment)
     row["undecodable_batch_slots"] = (
         batches.loc[batches.outcome.eq("batch_parse_failed"), "requested_count"].sum()
         if manifest is not None
@@ -238,7 +243,98 @@ def summarize_run(experiment: Experiment) -> dict:
     return row
 
 
-def runs_table(experiments: Sequence[Experiment]) -> pd.DataFrame:
+def generation_runs_table(experiments: Sequence[Experiment]) -> pd.DataFrame:
     """Stack summaries in input order, retaining failed runs and repeated selections."""
-    rows = [summarize_run(experiment) for experiment in experiments]
+    rows = [summarize_generation_run(experiment) for experiment in experiments]
     return pd.DataFrame(rows) if rows else pd.DataFrame(columns=["experiment_id", "name", "status"])
+
+
+# Deliberately narrow: FailedToParse and an unrecognized aggregation stage.
+# BadValue (2), for example, is too broad to label as syntax without more evidence.
+_SYNTAX_CODES = {9, 40324}
+_EXECUTION_COLUMNS = [
+    "workload_position",
+    "pattern_id",
+    "database",
+    "collection",
+    "query_kind",
+    "outcome",
+    "elapsed_ms",
+    "row_count",
+    "error_type",
+    "error_code",
+    "error_code_name",
+    "error_message",
+    "warnings",
+]
+
+
+def _execution_table(workload, results, *, planning):
+    _validate_mongo_workload(workload)
+    if len(workload) != len(results):
+        raise ValueError("Expected exactly one result per workload entry, in workload order")
+    rows = []
+    for position, (entry, result) in enumerate(zip(workload, results, strict=True)):
+        if not isinstance(result, ExecutionResult):
+            raise TypeError("results must contain native BONDI ExecutionResult objects")
+        error = result.error
+        details = error.details if isinstance(error, OperationFailure) and error.details else {}
+        code = error.code if isinstance(error, OperationFailure) else None
+        if result.status == "timeout":
+            outcome = "timeout"
+        elif error is not None:
+            outcome = (
+                ("syntax_error" if code in _SYNTAX_CODES else "other_error")
+                if planning
+                else "error"
+            )
+        elif planning:
+            outcome = "passed"
+        else:
+            if type(result.row_count) is not int or result.row_count not in (0, 1):
+                raise ValueError("Successful existence results must have row_count 0 or 1")
+            outcome = "empty" if result.row_count == 0 else "nonempty"
+        query = entry.query
+        rows.append(
+            dict(
+                workload_position=position,
+                pattern_id=entry.pattern_id,
+                database=query.target.database,
+                collection=query.target.collection,
+                query_kind="find" if isinstance(query, MongoFindQuery) else "aggregate",
+                outcome=outcome,
+                elapsed_ms=result.elapsed_ms,
+                row_count=result.row_count,
+                error_type=type(error).__name__ if error is not None else None,
+                error_code=code,
+                error_code_name=details.get("codeName"),
+                error_message=str(error) if error is not None else None,
+                warnings=result.warnings,
+            )
+        )
+    return pd.DataFrame(rows, columns=_EXECUTION_COLUMNS)
+
+
+def execution_planning_table(
+    workload: Workload, results: Sequence[ExecutionResult]
+) -> pd.DataFrame:
+    """Classify planning-only explain results in original workload order.
+
+    Outcomes: passed, syntax_error (explicit recognized codes only), other_error,
+    timeout. Passing does not prove runtime validity. Length mismatches raise.
+    Original result objects and their backend diagnostic data remain unchanged.
+    """
+    return _execution_table(workload, results, planning=True)
+
+
+def execution_existence_table(
+    workload: Workload, results: Sequence[ExecutionResult]
+) -> pd.DataFrame:
+    """Classify results of a limit-one probe: empty, nonempty, error or timeout.
+
+    Pass the original workload for identity and ordered results from its existence
+    workload. Successful results must report exactly 0 or 1 rows; absent/invalid
+    counts raise instead of being mistaken for empty. A nonempty result does not
+    prove full-query completion. Error/timeout results never count as empty.
+    """
+    return _execution_table(workload, results, planning=False)

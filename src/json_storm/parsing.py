@@ -5,9 +5,7 @@ from collections.abc import Collection
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from bondi.mongodb import MongoAggregateQuery, MongoCollectionRef, MongoFindQuery
-from bson import json_util
-from bson.errors import BSONError
+from bondi.mongodb import MongoAggregateQuery, MongoCollectionRef, MongoFindQuery, loads_query_json
 
 QueryKind = Literal["find", "aggregate"]
 MongoQuery = MongoFindQuery | MongoAggregateQuery
@@ -62,19 +60,6 @@ class ParsedBatch:
         return None if self.actual_count is None else self.actual_count == self.expected_count
 
 
-def _object(pairs):
-    result = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError(f"Duplicate JSON key: {key!r}")
-        result[key] = value
-    return result
-
-
-def _constant(value):
-    raise ValueError(f"Nonstandard JSON numeric literal: {value}")
-
-
 def _query(entry: Any, kind: QueryKind, database: str, collections: Collection[str]) -> MongoQuery:
     if not isinstance(entry, dict):
         raise ValueError("Each query must be an object")
@@ -124,7 +109,7 @@ def parse_batch(
     Invalid model output becomes result records. Invalid caller configuration
     raises TypeError or ValueError. expected_count is this call's requested count,
     including a possibly smaller final batch, rather than the experiment total.
-    Extended JSON uses PyMongo BSON semantics; raw entries retain their original JSON values.
+    Extended JSON uses BONDI query-aware BSON decoding; raw entries retain their original JSON values.
     Successful parsing does not establish semantic validity or read-only safety.
     """
     if not isinstance(response, str):
@@ -141,11 +126,11 @@ def parse_batch(
         MongoCollectionRef(database, name)  # Validate configuration before parsing model output.
     names = frozenset(collections)
     try:
-        raw_payload = json.loads(response, object_pairs_hook=_object, parse_constant=_constant)
-        # object_pairs_hook overrides json_util's object_hook: validate duplicates
-        # separately, then decode BSON with PyMongo's normal Extended JSON semantics.
-        payload = json_util.loads(response, parse_constant=_constant)
-    except (ValueError, TypeError, KeyError, BSONError, RecursionError, OverflowError) as exc:
+        payload = loads_query_json(response)
+        # BONDI has validated strict JSON and BSON wrappers. Keep ordinary JSON
+        # separately for audit records, without reimplementing its validation.
+        raw_payload = json.loads(response)
+    except ValueError as exc:
         return ParsedBatch(
             batch_index, response, expected_count, error=ParseError("invalid_json", str(exc))
         )

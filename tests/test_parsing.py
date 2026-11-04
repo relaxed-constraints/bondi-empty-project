@@ -253,7 +253,7 @@ def test_batch_index_is_preserved_on_batches_candidates_and_failures(batch_index
 def test_extended_json_bson_workload_roundtrip(kind, tmp_path):
     from datetime import datetime
 
-    from bson import ObjectId, Regex
+    from bson import ObjectId
 
     predicate = {
         "name": {"$regex": "tom*", "$options": "i"},
@@ -270,7 +270,7 @@ def test_extended_json_bson_workload_roundtrip(kind, tmp_path):
     assert candidate.error is None and candidate.raw == entry
     query = candidate.query
     decoded = query.filter if kind == "find" else query.pipeline[0]["$match"]
-    assert isinstance(decoded["name"], Regex)
+    assert decoded["name"] == predicate["name"]
     assert decoded["created"]["$gte"] == datetime(2023, 1, 1)
     assert isinstance(decoded["_id"], ObjectId)
     path = tmp_path / "bson.jsonl"
@@ -289,4 +289,34 @@ def test_invalid_extended_json_is_batch_decode_failure(value):
 
 def test_shell_dates_remain_invalid_json():
     result = parse('{"queries":[{"collection":"users","filter":{"date":ISODate("2023-01-01")}}]}')
+    assert result.error.status == "invalid_json"
+
+
+def test_elemmatch_and_bson_projection_roundtrip(tmp_path):
+    from bson import Regex
+
+    entry = find(
+        filter={"tags": {"$elemMatch": {"$regex": "^python$", "$options": "i"}}},
+        projection={
+            "comments": {
+                "$elemMatch": {
+                    "text": {"$regularExpression": {"pattern": "python", "options": "i"}}
+                }
+            }
+        },
+    )
+    result = parse(batch(entry))
+    assert result.error is None
+    candidate = result.candidates[0]
+    assert candidate.raw == entry
+    query = candidate.query
+    assert query.filter == entry["filter"]
+    assert isinstance(query.projection["comments"]["$elemMatch"]["text"], Regex)
+    path = tmp_path / "workload.jsonl"
+    Workload([WorkloadEntry(query)]).save(path)
+    assert Workload.load(path)[0].query == query
+
+
+def test_bondi_rejects_overflowing_json_number():
+    result = parse('{"queries":[{"collection":"users","filter":{"x":1e999}}]}')
     assert result.error.status == "invalid_json"

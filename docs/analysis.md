@@ -1,40 +1,47 @@
-# Generation analysis
+# Generation and execution analysis
 
-The executed `notebooks/analysis.ipynb` walks through all four helpers using the
-recent Sol and Qwen sweeps, with visible tables and a model comparison chart.
+The `notebooks/generation_analysis.ipynb` notebook walks through the four generation
+helpers, including tables and a model comparison chart. Select your rerun experiment
+IDs before running it. Use `notebooks/execution_analysis.ipynb` to inspect planning
+and existence outcomes and compare execution runs.
 
 Use native Yanex experiments directly; the helpers do not create another run class.
-All four helpers validate that `experiment.script_path.name` is `generate.py` and
+All four generation helpers validate that `experiment.script_path.name` is `generate.py` and
 raise `ValueError` otherwise (including when the script path is missing).
 
 ```python
 import yanex.results as yr
-from json_storm.analysis import summarize_run, batch_table, candidate_table, runs_table
+from json_storm.analysis import (
+    summarize_generation_run,
+    generation_batches_table,
+    generation_candidates_table,
+    generation_runs_table,
+)
 
-experiment = yr.get_experiment('af97d240')
-summary = summarize_run(experiment)
-batches = batch_table(experiment)
-candidates = candidate_table(experiment)
-failures = candidates[candidates['outcome'] != 'accepted']
+experiment = yr.get_experiment("af97d240")
+summary = summarize_generation_run(experiment)
+batches = generation_batches_table(experiment)
+candidates = generation_candidates_table(experiment)
+failures = candidates[candidates["outcome"] != "accepted"]
 
-experiments = yr.get_experiments(ids=['57d6f1c3', '28b9755c'])
-runs = runs_table(experiments)
-print(runs[['experiment_id', 'model', 'prompt_id', 'accepted_yield', 'distinct_yield']])
+experiments = yr.get_experiments(ids=["57d6f1c3", "28b9755c"])
+runs = generation_runs_table(experiments)
+print(runs[["experiment_id", "model", "prompt_id", "accepted_yield", "distinct_yield"]])
 ```
 
 ## Returned data
 
-- `summarize_run`: dictionary containing ID, name, status, checkpoint status,
+- `summarize_generation_run`: dictionary containing ID, name, status, checkpoint status,
   model/prompt/batch configuration, schema SHA256, recorded metrics and derived values.
-- `batch_table`: one row per saved or manifest-listed batch. Includes requested count,
+- `generation_batches_table`: one row per saved or manifest-listed batch. Includes requested count,
   outcome, original parse error, finish reason, elapsed milliseconds and normalized
   token/cost fields. Outcomes are `decoded`, `batch_parse_failed`, `model_call_failed`
   or `missing_artifact`. Both nested and historical flattened paths are supported.
-- `candidate_table`: one row per decoded candidate, retaining raw query, errors and
+- `generation_candidates_table`: one row per decoded candidate, retaining raw query, errors and
   target/persistence outcomes. Accepted queries receive native BONDI fingerprints
   and workload positions using the saved mapping. Outcomes are `accepted`,
   `parse_failed`, `target_violation`, `persistence_failed` or `unknown`.
-- `runs_table`: stacks summaries in input order. Keeps failed experiments and repeated
+- `generation_runs_table`: stacks summaries in input order. Keeps failed experiments and repeated
   selections; does not aggregate repetitions. Empty input yields an empty table with
   experiment_id/name/status columns.
 
@@ -75,7 +82,7 @@ future steps.
 
 ## Field reference
 
-### `summarize_run(experiment)`
+### `summarize_generation_run(experiment)`
 
 Returns a dictionary for one experiment. Recorded metric keys are included only
 when present in the selected metric snapshot; configuration and derived keys below
@@ -140,7 +147,7 @@ are passed through too, except Yanex's `step`, `timestamp` and `last_updated`.
 Ratios are `None` when their numerator is missing or denominator is zero. Usage
 ratios can reflect partial reporting; check the corresponding reported-call counts.
 
-### `batch_table(experiment)`
+### `generation_batches_table(experiment)`
 
 Returns a DataFrame with one row per saved or manifest-listed batch. These columns
 exist even when the table is empty. Missing measurements use pandas missing values.
@@ -165,9 +172,9 @@ exist even when the table is empty. Missing measurements use pandas missing valu
 | `table.attrs['manifest_available']` | DataFrame metadata, not a column: whether the generation manifest exists. |
 
 `decoded` does not mean every candidate was accepted. Count mismatches are not a
-separate batch outcome; their run-level count is available in `summarize_run`.
+separate batch outcome; their run-level count is available in `summarize_generation_run`.
 
-### `candidate_table(experiment)`
+### `generation_candidates_table(experiment)`
 
 Returns a DataFrame with one row per extracted candidate. A candidate is one entry
 from the decoded response's `queries` array, before acceptance checks. Undecodable
@@ -193,9 +200,9 @@ workload/mapping artifacts can also leave those fields missing for accepted entr
 When multiple failure flags exist, `outcome` takes the first in this order: parse
 failure, target violation, persistence failure, acceptance, unknown.
 
-### `runs_table(experiments)`
+### `generation_runs_table(experiments)`
 
-Returns a DataFrame with one `summarize_run` dictionary per input experiment.
+Returns a DataFrame with one `summarize_generation_run` dictionary per input experiment.
 Its columns are exactly the union of summary keys described above; no extra
 comparison metrics or averages are calculated.
 
@@ -204,7 +211,7 @@ comparison metrics or averages are calculated.
 | `experiment_id`, `name`, `status` | Identity and status of the experiment represented by this row. Also the only columns for empty input. |
 | `manifest_status`, `metrics_source` | Checkpoint status and provenance of that row's metrics. |
 | `prompt_id`, `model`, `num_queries`, `batch_size`, `target_collection` | Main configuration columns for selecting, grouping and comparing experiments. |
-| `examples_per_type`, `relationship_hints`, `system_instructions`, `model_parameters`, `reasoning_effort`, `schema_sha256` | Remaining configuration and schema context, with the same meanings as in `summarize_run`. |
+| `examples_per_type`, `relationship_hints`, `system_instructions`, `model_parameters`, `reasoning_effort`, `schema_sha256` | Remaining configuration and schema context, with the same meanings as in `summarize_generation_run`. |
 | Recorded metric columns | All metrics included by the individual summaries, including failure counts, usage and reporting coverage. A metric absent from a run becomes a missing value in that row. |
 | `unique_queries`, `exact_duplicate_queries`, `accepted_yield`, `distinct_yield`, `undecodable_batch_slots` | Per-run diversity and yield measures; not calculated across the combined selection. |
 | `model_seconds`, `seconds_per_accepted`, the six `*_per_accepted` usage columns | Per-run time and usage derivatives, as defined in the summary table. |
@@ -212,3 +219,16 @@ comparison metrics or averages are calculated.
 Input order and repeated selections are preserved. The DataFrame index is an
 ordinary row index; `experiment_id` remains a column. Failed runs are not filtered
 out. DataFrame attrs from batch/candidate tables are not copied into this table.
+
+## Execution result tables
+
+`execution_planning_table(workload, results)` and
+`execution_existence_table(workload, results)` also live in `json_storm.analysis`.
+They accept the original BONDI workload and ordered native `ExecutionResult`
+objects, rather than a Yanex experiment. See the [execution table reference](execution.md#classification-tables)
+for columns and outcomes. `make_existence_workload` stays in `json_storm.execution`.
+
+```python
+from json_storm.analysis import execution_planning_table, execution_existence_table
+from json_storm.execution import make_existence_workload
+```

@@ -11,10 +11,12 @@ from bondi.schema import Schema
 from json_storm.schema import render_schema_catalog
 from json_storm.prompts import PROMPTS
 
-schema_text = render_schema_catalog({
-    "businesses": Schema.from_documents([{"business_id": "b1"}]),
-    "reviews": Schema.from_documents([{"business_id": "b1", "rating": 5}]),
-})
+schema_text = render_schema_catalog(
+    {
+        "businesses": Schema.from_documents([{"business_id": "b1"}]),
+        "reviews": Schema.from_documents([{"business_id": "b1", "rating": 5}]),
+    }
+)
 prompt = PROMPTS["p1"].render(
     schema_text,
     num_queries=8,
