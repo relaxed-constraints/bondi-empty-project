@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Require BONDI `>=0.4.0,<0.5.0`; the starter needs no connection API changes.
+
 ## 0.2.0 — 2026-11-19
 
 - Return greeting strings from `hello_world()` and update the CLI, experiment, notebook, and tests.
