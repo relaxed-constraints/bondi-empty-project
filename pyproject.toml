@@ -10,7 +10,7 @@ dependencies = [
     "pandas>=3.1.0",
     "matplotlib>=3.11.2",
     "ipykernel>=7.4.0",
-    "bondi>=0.3.7",
+    "bondi>=0.3,<0.4",
 ]
 
 [project.scripts]
